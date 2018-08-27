@@ -1,10 +1,9 @@
 var PhotoSharing = artifacts.require("./PhotoSharing.sol");
 
 contract('PhotoSharing', function (accounts) {
-
-  describe('Initial Account creation/actions', async () => {
-    const photoSharingInstance = await PhotoSharing.deployed();
-
+  describe('Initial Account creation/actions', () => {
+    let photoSharingInstance;
+    PhotoSharing.deployed().then((out) => photoSharingInstance = out);
     it("...should increment id on account creation.", async () => {
       await photoSharingInstance.addAccount('test_user', {
         from: accounts[0]
@@ -52,9 +51,9 @@ contract('PhotoSharing', function (accounts) {
       await photoSharingInstance.addPost(hash, {
         from: accounts[0]
       });
-      const post = await photoSharingInstance.posts.call(0);
+      const post = await photoSharingInstance.getPost.call(0);
       assert.equal(accounts[0], post[0], 'the addresss should be the same');
-      assert.equal(hash, post[2], 'the hash should be the same');
+      assert.equal(hash, post[1], 'the hash should be the same');
     });
 
     it('... should populate the post in the users account', async () => {
