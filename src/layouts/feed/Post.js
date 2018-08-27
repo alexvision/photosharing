@@ -1,12 +1,10 @@
-import React from 'react';
+// Vendor
+import React from "react";
 
-const Post = (props, index) => {
-  // console.log(props, index);
-  return (
-    <section key={index}>
-      <img src={props.image} style={{ height: 250, width: 250 }} />
-      <div>{props.copy}</div>
-    </section>
-  );
-};
+const Post = (props, index) => (
+  <section key={index}>
+    <img src={props.image} style={{ maxHeight: 500, maxWidth: 500 }} />
+    <div>{props.copy}</div>
+  </section>
+);
 export default Post;

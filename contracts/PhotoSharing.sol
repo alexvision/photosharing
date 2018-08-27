@@ -10,7 +10,6 @@ contract PhotoSharing {
     
     struct Post {
         address poster;
-        string copy;
         string contentHash;
     }
     struct Account {
@@ -43,11 +42,11 @@ contract PhotoSharing {
         emit NewUser(msg.sender, _username);
     }
     
-    function addPost(string _copy, string _imageHash)
+    function addPost(string _imageHash)
         public
         returns (uint)
     {
-        uint post = posts.push(Post(msg.sender, _copy, _imageHash));
+        uint post = posts.push(Post(msg.sender, _imageHash));
         accounts[msg.sender].userPosts.push(post);
         lastPostIndex = post;
         
@@ -67,8 +66,8 @@ contract PhotoSharing {
     function getPost(uint _id)
         public
         view
-        returns (address, string, string)
+        returns (address, string)
     {
-        return (posts[_id].poster, posts[_id].copy, posts[_id].contentHash);
+        return (posts[_id].poster, posts[_id].contentHash);
     }
 }

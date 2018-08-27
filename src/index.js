@@ -6,7 +6,7 @@ import { DrizzleProvider } from 'drizzle-react'
 
 // Layouts
 import App from './App'
-import FeedContainer from './layouts/feed/FeedContainer'
+import SignupContainer from './layouts/signup/SignupContainer'
 import { LoadingContainer } from 'drizzle-react-components'
 
 import store from './store'
@@ -20,7 +20,7 @@ ReactDOM.render((
       <LoadingContainer>
         <Router history={history}>
           <Route path="/" component={App}>
-            <IndexRoute component={FeedContainer} />
+            <IndexRoute component={SignupContainer} />
           </Route>
         </Router>
       </LoadingContainer>

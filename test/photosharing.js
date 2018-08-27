@@ -48,14 +48,12 @@ contract('PhotoSharing', function (accounts) {
     });
 
     it('... should be possible to make a post', async () => {
-      const copy = 'copy_string';
       const hash = 'potential_hash';
-      await photoSharingInstance.addPost(copy, hash, {
+      await photoSharingInstance.addPost(hash, {
         from: accounts[0]
       });
       const post = await photoSharingInstance.posts.call(0);
       assert.equal(accounts[0], post[0], 'the addresss should be the same');
-      assert.equal(copy, post[1], 'the copy should be the same');
       assert.equal(hash, post[2], 'the hash should be the same');
     });
 

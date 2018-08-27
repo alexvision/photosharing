@@ -1,39 +1,63 @@
 // Vendor
 import React, { Component } from "react";
-import { AccountData, ContractForm } from "drizzle-react-components";
-import ipfsApi from "ipfs-api";
-const ipfs = ipfsApi({
-  host: "ipfs.infura.io",
-  port: "5001",
-  protocol: "https"
-});
+import PropTypes from "prop-types";
 
 // Internal
-import parser from "../../util/parser";
-import Post from './Post';
+import { getFromIPFS, pushToIPFS } from "../../util/ipfs";
+import Post from "./Post";
 
 class Feed extends Component {
-  constructor() {
+  constructor(props, context) {
     super();
+    this.contract = context.drizzle.contracts.PhotoSharing;
     this.state = {
+      copy: "",
       image: null,
+      posting: false,
       posts: []
     };
   }
-  writeToIPFS = async () => {
+  // This would be ideal to batch, but drizzle doesn't seem to support batching
+  getPosts = async startIndex => {
+    const { methods } = this.contract;
+    let posts = [];
+    try {
+      const lastPost =
+        startIndex || Number(await methods.lastPostIndex().call()) - 1;
+      const fetches = [];
+      for (let i = lastPost; i > 0 && fetches.length < 10; i--) {
+        const val = methods.getPost(i).call();
+        fetches.push(val);
+      }
+      const rawPosts = await Promise.all(fetches);
+      for (let i = 0; i < rawPosts.length; i++) {
+        posts.push(await getFromIPFS(rawPosts[i][1]));
+      }
+    } catch (e) {
+      console.log(e);
+    }
+    this.setState({ posts: [...this.state.posts, ...posts] });
+  };
+
+  makePost = async event => {
+    event.preventDefault();
+    this.setState({ posting: true });
     const doc = await Buffer.from(
       JSON.stringify({
-        copy: "This is the text that should go down the bottom",
+        copy: this.state.copy,
         image: this.state.image
       })
     );
-    const res = await ipfs.add(doc);
-    const [cid] = res;
-    const getRes = await ipfs.get(cid.path);
-    const [val] = getRes;
-    const ipfsStoredVal = parser(val.content.toString());
-    this.setState({ posts: [...this.state.posts, ipfsStoredVal] });
+    const hash = await pushToIPFS(doc);
+    this.contract.methods.addPost(hash).send();
+    const post = await getFromIPFS(hash);
+    this.setState({
+      copy: "",
+      posting: false,
+      posts: [post, ...this.state.posts]
+    });
   };
+
   captureFile = event => {
     event.stopPropagation();
     event.preventDefault();
@@ -46,56 +70,50 @@ class Feed extends Component {
     };
   };
 
+  handleCopyChange = event => {
+    this.setState({ copy: event.target.value });
+  };
+
   async componentDidMount() {
-    const [post] = await ipfs.get(
-      "Qmax1tKJFWNLcyCD5NDUBKYqanoJp9M4tryeLpGrqLLKNV"
-    );
-    const parsed = parser(post.content.toString());
-    this.setState({ posts: [...this.state.posts, parsed] });
-    global.getRes = post;
-    global.post = parsed;
+    this.getPosts();
   }
+
   render() {
+    const { copy, image, posting } = this.state;
     return (
       <main className="container">
         <div className="pure-g">
           <div className="pure-u-1-1 header">
-            <h1>Feed</h1>
-            <input type="file" onChange={this.captureFile} />
-            <button onClick={this.writeToIPFS}>Write to IPFS</button>
+            <h1>Image Feed</h1>
+            <h3>Upload pictures and add some details about it</h3>
+            {posting ? (
+              "Sending Post Now, it may take a while (up to several minutes for large images)"
+            ) : (
+              <form onSubmit={this.makePost}>
+                <input type="file" onChange={this.captureFile} required />
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Say something"
+                    value={copy}
+                    onChange={this.handleCopyChange}
+                  />
+                </div>
+                <input type="submit" value="Write to IPFS" />
+              </form>
+            )}
+            <br />
+            <br />
             {this.state.posts.map(Post)}
-            <br />
-            <br />
-          </div>
-
-          <div className="pure-u-1-1">
-            <h2>PhotoSharing</h2>
-            <p>My own custom contract.</p>
-            {/* <p><strong>Posts</strong>: <ContractData contract="PhotoSharing" method="posts" toUtf8 /></p> */}
-            <ContractForm
-              contract="PhotoSharing"
-              method="addAccount"
-              labels={["Username"]}
-            />
-            <ContractForm
-              contract="PhotoSharing"
-              method="addPost"
-              labels={["Copy", "Hash"]}
-            />
-            <br />
-            <br />
-          </div>
-
-          <div className="pure-u-1-1">
-            <h2>Active Account</h2>
-            <AccountData accountIndex="0" units="ether" precision="3" />
-            <br />
-            <br />
           </div>
         </div>
       </main>
     );
   }
 }
+
+Feed.contextTypes = {
+  drizzle: PropTypes.object
+};
 
 export default Feed;
