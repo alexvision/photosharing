@@ -6,6 +6,7 @@ contract PhotoSharing {
     uint public lastPostIndex = 0;
     mapping (address => Account) accounts;
     mapping (string => address) accountNames;
+    mapping (uint => address) accountIds;
     Post[] public posts;
     
     struct Post {
@@ -39,6 +40,7 @@ contract PhotoSharing {
         lastAccountId++;
         accounts[msg.sender] = Account(lastAccountId, _username, userPosts);
         accountNames[_username] = msg.sender;
+        accountIds[lastAccountId] = msg.sender;
         emit NewUser(msg.sender, _username);
     }
     

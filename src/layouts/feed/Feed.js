@@ -22,6 +22,7 @@ class Feed extends Component {
     const { methods } = this.contract;
     let posts = [];
     try {
+      // TODO: work out why I'm getting errors for the 0th indexed element
       const lastPost =
         startIndex || Number(await methods.lastPostIndex().call()) - 1;
       const fetches = [];
@@ -49,10 +50,11 @@ class Feed extends Component {
       })
     );
     const hash = await pushToIPFS(doc);
-    this.contract.methods.addPost(hash).send();
+    await this.contract.methods.addPost(hash).send();
     const post = await getFromIPFS(hash);
     this.setState({
       copy: "",
+      image: null,
       posting: false,
       posts: [post, ...this.state.posts]
     });
