@@ -1,9 +1,12 @@
 pragma solidity ^0.4.24;
 
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract PhotoSharing {
+contract PhotoSharing is Ownable {
     uint public lastAccountId = 0;
     uint public lastPostIndex = 0;
+    bool public isStopped = false;
+
     mapping (address => Account) accounts;
     mapping (string => address) accountNames;
     mapping (uint => address) accountIds;
@@ -30,9 +33,22 @@ contract PhotoSharing {
         require(accounts[accountNames[_username]].id == 0, "Username already taken");
         _;
     }
+    modifier notStopped() {
+        require(!isStopped, "Contract is stopped");
+        _;
+    }
+
+    function setEmergencyStop(bool _direction)
+        public
+        onlyOwner()
+    {
+        isStopped = _direction;
+    }
     
+
     function addAccount(string _username)
         public
+        notStopped()
         usernameDoesNotExist(_username)
     {
         require(accounts[msg.sender].id == 0, "User already has an account");
@@ -46,6 +62,7 @@ contract PhotoSharing {
     
     function addPost(string _imageHash)
         public
+        notStopped()
         returns (uint)
     {
         uint post = posts.push(Post(msg.sender, _imageHash));
