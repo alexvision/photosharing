@@ -1,5 +1,6 @@
 // Vendor
 import React, { Component } from "react";
+import { AccountData} from "drizzle-react-components";
 import PropTypes from "prop-types";
 
 // Internal
@@ -82,35 +83,29 @@ class Feed extends Component {
 
   render() {
     const { copy, image, posting } = this.state;
-    return (
-      <main className="container">
+    return <main className="container">
         <div className="pure-g">
           <div className="pure-u-1-1 header">
             <h1>Image Feed</h1>
+            <div className="pure-u-1-1">
+              <h3>Active Account:</h3>
+              <AccountData accountIndex="0" units="ether" precision="3" />
+            </div>
             <h3>Upload pictures and add some details about it</h3>
-            {posting ? (
-              "Sending Post Now, it may take a while (up to several minutes for large images)"
-            ) : (
-              <form onSubmit={this.makePost}>
+
+            {posting ? "Sending Post Now, it may take a while (up to several minutes for large images)" : <form onSubmit={this.makePost}>
                 <input type="file" onChange={this.captureFile} required />
                 <div>
-                  <input
-                    type="text"
-                    placeholder="Say something"
-                    value={copy}
-                    onChange={this.handleCopyChange}
-                  />
+                  <input type="text" placeholder="Say something" value={copy} onChange={this.handleCopyChange} />
                 </div>
                 <input type="submit" value="Write to IPFS" />
-              </form>
-            )}
+              </form>}
             <br />
             <br />
             {this.state.posts.map(Post)}
           </div>
         </div>
-      </main>
-    );
+      </main>;
   }
 }
 
